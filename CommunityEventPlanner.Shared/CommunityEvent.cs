@@ -17,7 +17,7 @@ namespace CommunityEventPlanner.Shared
 
         public int VenueId { get; set; }
         public virtual Venue? Venue { get; set; }
-
+        public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();
         public DateTime ScheduledDateTime { get; set; }
         public TimeSpan Duration { get; set; }
     }
