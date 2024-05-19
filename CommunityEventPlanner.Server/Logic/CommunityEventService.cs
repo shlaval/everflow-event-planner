@@ -1,7 +1,7 @@
 ﻿using CommunityEventPlanner.Shared;
 using CommunityEventPlanner.Shared.Requests;
 using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace CommunityEventPlanner.Server.Logic
 {
@@ -18,46 +18,84 @@ namespace CommunityEventPlanner.Server.Logic
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<Result<int>> CreateCommunityEvent(CommunityEvent communityEvent)
+        public async Task<Result<int>> CreateCommunityEvent(CommunityEventCreateRequest createRequest)
         {
             var userId = GetUserId();
             if (userId != null)
             {
-                var newCommunityEvent = new CommunityEvent()
+                var communityEvent = new CommunityEvent()
                 {
-                    Title = communityEvent.Title,
-                    Description = communityEvent.Description,
-                    VenueId = communityEvent.VenueId,
+                    Title = createRequest.Title,
+                    Description = createRequest.Description,
+                    VenueId = createRequest.VenueId,
                     OwnerId = userId,
+                    ScheduledDateTime = createRequest.ScheduledDateTime,
+                    Duration = createRequest.Duration
                 };
 
-                _context.CommunityEvents.Add(newCommunityEvent);
+                _context.CommunityEvents.Add(communityEvent);
+                await _context.SaveChangesAsync();
             }
 
             return new Result<int>() { Message = "An unknown error occurred", HttpStatusCode = 500 };
         }
 
-        public Task<Result<bool>> DeleteCommunityEvent(int id)
+        public async Task<Result<bool>> DeleteCommunityEvent(int id)
         {
-            throw new NotImplementedException();
+            var userId = GetUserId();
+            if (userId != null)
+            {
+                var communityEvent = await _context.CommunityEvents.FirstOrDefaultAsync(ce => ce.Id == id);
+                if (communityEvent == null)
+                {
+                    return new Result<bool>(false) { HttpStatusCode = 404, Message = "The requested entity was not found" };
+                }
+                else if (communityEvent.OwnerId != userId)
+                {
+                    return new Result<bool>(false) { HttpStatusCode = 403, Message = "The requested operation is not permitted." };
+                }
+                else
+                {
+                    _context.CommunityEvents.Remove(communityEvent);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return new Result<bool>() { Message = "An unknown error occurred", HttpStatusCode = 500 };
         }
 
-        public Task<Result<CommunityEvent>> GetCommunityEvent(int id)
+        public async Task<Result<CommunityEvent>> GetCommunityEvent(int id)
         {
-            throw new NotImplementedException();
+            var communityEvent = await _context.CommunityEvents.FirstOrDefaultAsync(ce => ce.Id == id);
+            if (communityEvent == null)
+            {
+                return new Result<CommunityEvent>() { HttpStatusCode = 404, Message = "The requested entity was not found" };
+            }
+
+            return new Result<CommunityEvent>(communityEvent);
         }
 
-        public Task<Result<IList<CommunityEvent>>> GetCommunityEvents(SearchRequest searchRequest)
+        public async Task<Result<IList<CommunityEvent>>> GetCommunityEvents(SearchRequest searchRequest)
         {
-            throw new NotImplementedException();
+            var queryable = GetCommunityEventQueryable(searchRequest);
+            var communityEvents = await queryable.ToListAsync();
+            return new Result<IList<CommunityEvent>>(communityEvents);
         }
 
-        public Task<Result<bool>> SignUpForCommunityEvent(int id, string userId)
+        public async Task<Result<bool>> SignUpForCommunityEvent(int id, string userId)
         {
-            throw new NotImplementedException();
+            var signUp = new SignUp()
+            {
+                CommunityEventId = id,
+                UserId = userId
+            };
+
+            _context.SignUps.Add(signUp);
+            await _context.SaveChangesAsync();
+            return new Result<bool>(true);
         }
 
-        public Task<Result<bool>> UpdateCommunityEvent(CommunityEvent communityEvent)
+        public Task<Result<bool>> UpdateCommunityEvent(CommunityEventCreateRequest communityEvent)
         {
             throw new NotImplementedException();
         }
@@ -70,6 +108,41 @@ namespace CommunityEventPlanner.Server.Logic
             }
 
             return null;
+        }
+
+        private IQueryable<CommunityEvent> GetCommunityEventQueryable(SearchRequest searchRequest)
+        {
+            var baseQueryable = _context.CommunityEvents.AsQueryable();
+
+            if (searchRequest != null)
+            {
+                if (searchRequest.SearchTerm != null)
+                {
+                    baseQueryable = baseQueryable.Where(ce => ce.Title.Contains(searchRequest.SearchTerm) || ce.Description.Contains(searchRequest.SearchTerm));
+                }
+
+                if (searchRequest.VenueId.HasValue)
+                {
+                    baseQueryable = baseQueryable.Where(ce => ce.VenueId == searchRequest.VenueId.Value);
+                }
+
+                if (searchRequest.TagIds.Any())
+                {
+                    baseQueryable = baseQueryable.Where(ce => ce.Tags.Any(t => searchRequest.TagIds.Contains(t.Id)));
+                }
+
+                if (searchRequest.StartDate.HasValue)
+                {
+                    baseQueryable = baseQueryable.Where(ce => ce.ScheduledDateTime > searchRequest.StartDate.Value);
+                }
+
+                if (searchRequest.EndDate.HasValue)
+                {
+                    baseQueryable = baseQueryable.Where(ce => ce.ScheduledDateTime < searchRequest.EndDate.Value);
+                }
+            }
+
+            return baseQueryable;
         }
     }
 }
