@@ -1,7 +1,6 @@
-﻿using CommunityEventPlanner.Shared;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 
-namespace CommunityEventPlanner.Server
+namespace CommunityEventPlanner.Shared
 {
     public class ApplicationUser : IdentityUser
     {

@@ -1,8 +1,7 @@
-﻿using CommunityEventPlanner.Shared;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace CommunityEventPlanner.Server
+namespace CommunityEventPlanner.Shared
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {

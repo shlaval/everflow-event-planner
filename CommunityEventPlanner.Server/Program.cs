@@ -1,8 +1,7 @@
-using CommunityEventPlanner.Server;
+using CommunityEventPlanner.Shared;
 using CommunityEventPlanner.Server.Logic;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
