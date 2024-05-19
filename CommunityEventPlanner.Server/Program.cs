@@ -1,4 +1,5 @@
 using CommunityEventPlanner.Server;
+using CommunityEventPlanner.Server.Logic;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -16,13 +17,16 @@ builder.Services.AddAuthorizationBuilder();
 builder.Services.AddDbContext<ApplicationDbContext>(
     options => options.UseInMemoryDatabase("AppDb"));
 
-// builder.Services.AddAuthorization();
-
 builder.Services.AddIdentityCore<ApplicationUser>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddApiEndpoints();
 
+builder.Services.AddTransient<ICommunityEventService, CommunityEventService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<UserManager<ApplicationUser>, UserManager<ApplicationUser>>();
+
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

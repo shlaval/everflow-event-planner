@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CommunityEventPlanner.Shared
+﻿namespace CommunityEventPlanner.Shared
 {
     public class Result<T>
     {
+        public Result()
+        {
+            Success = false;
+        }
+
         public Result(T value)
         {
             Success = true;
