@@ -33,7 +33,8 @@ namespace CommunityEventPlanner.Server.Controllers
         }
 
         /// <summary>
-        /// This is an incomplete example - should be factored out into a base class for other controllers to inherit from 
+        /// This is an incomplete example - should be factored out into a base class for other 
+        /// controllers to inherit from 
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="result"></param>

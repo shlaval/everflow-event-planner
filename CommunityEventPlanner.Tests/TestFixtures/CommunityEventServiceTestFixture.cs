@@ -1,5 +1,6 @@
 ﻿using CommunityEventPlanner.Server.Logic;
 using CommunityEventPlanner.Shared;
+using CommunityEventPlanner.Shared.TestData;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -23,8 +24,11 @@ namespace CommunityEventPlanner.Tests.TestFixtures
                 .UseInternalServiceProvider(_serviceProvider);
 
             ApplicationDbContext = new ApplicationDbContext(builder.Options);
+
+            TestDataGenerator.Generate(ApplicationDbContext);
+
             var userStoreMock = new Mock<IUserStore<ApplicationUser>>();
-            UserManagerMock = new Mock<UserManager<ApplicationUser>>(userStoreMock.Object, null, null, null, null, null, null, null, null);
+            UserManagerMock = new Mock<UserManager<ApplicationUser>>(userStoreMock.Object, null!, null!, null!, null!, null!, null!, null!, null!);
             HttpContextAccessorMock = new Mock<IHttpContextAccessor>();
             CommunityEventService = new CommunityEventService(ApplicationDbContext, UserManagerMock.Object, HttpContextAccessorMock.Object);
         }
