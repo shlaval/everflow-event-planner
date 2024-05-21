@@ -23,6 +23,11 @@ namespace CommunityEventPlanner.Server.Logic
             var userId = GetUserId();
             if (userId != null)
             {
+                if (!ValidateVenueIsFree(createRequest))
+                {
+                    return new Result<int>() { Message = "A booking already exists at the specified venue at the requested time", HttpStatusCode = 400 };
+                }
+
                 var communityEvent = new CommunityEvent()
                 {
                     Title = createRequest.Title,
@@ -35,9 +40,25 @@ namespace CommunityEventPlanner.Server.Logic
 
                 _context.CommunityEvents.Add(communityEvent);
                 await _context.SaveChangesAsync();
+
+                return new Result<int>(communityEvent.Id) { HttpStatusCode = 204, Success = true };
+            }
+            else
+            {
+                return new Result<int>() { Message = "Could not validate your user account", HttpStatusCode = 401 };
+            }
+        }
+
+        private bool ValidateVenueIsFree(CommunityEventCreateRequest createRequest)
+        {
+            var venue = _context.Venues.FirstOrDefault(v => v.Id == createRequest.VenueId);
+            if (venue != null)
+            {
+                return !venue.CommunityEvents.Any(ce => (ce.ScheduledDateTime < createRequest.ScheduledDateTime + createRequest.Duration) && 
+                                                 (ce.ScheduledDateTime + ce.Duration > createRequest.ScheduledDateTime));
             }
 
-            return new Result<int>() { Message = "An unknown error occurred", HttpStatusCode = 500 };
+            return false;
         }
 
         public async Task<Result<bool>> DeleteCommunityEvent(int id)
@@ -84,15 +105,33 @@ namespace CommunityEventPlanner.Server.Logic
 
         public async Task<Result<bool>> SignUpForCommunityEvent(int id, string userId)
         {
-            var signUp = new SignUp()
-            {
-                CommunityEventId = id,
-                UserId = userId
-            };
+            var communityEvent = await _context.CommunityEvents.FirstOrDefaultAsync(ce => ce.Id == id);
 
-            _context.SignUps.Add(signUp);
-            await _context.SaveChangesAsync();
-            return new Result<bool>(true);
+            var userFound = _context.Users.Any(au =>  au.UserName == userId);
+
+            if (!userFound)
+            {
+                return new Result<bool>(false) { Success = false, HttpStatusCode = 400, Message = "Invalid user." };
+            }
+
+            if (communityEvent != null)
+            {
+                if (communityEvent.SignUps.Any(su => su.UserId == userId))
+                {
+                    return new Result<bool>(false) { Success = false, HttpStatusCode = 400, Message = "That user has already signed up for that event." };
+                }
+                var signUp = new SignUp()
+                {
+                    CommunityEventId = id,
+                    UserId = userId
+                };
+
+                _context.SignUps.Add(signUp);
+                await _context.SaveChangesAsync();
+                return new Result<bool>(true);
+            }
+
+            return new Result<bool>(false) { Success = false, HttpStatusCode = 404, Message = "That community event could not be found" };
         }
 
         public Task<Result<bool>> UpdateCommunityEvent(CommunityEventCreateRequest communityEvent)
@@ -116,7 +155,7 @@ namespace CommunityEventPlanner.Server.Logic
 
             if (searchRequest != null)
             {
-                if (searchRequest.SearchTerm != null)
+                if (!string.IsNullOrEmpty(searchRequest.SearchTerm))
                 {
                     baseQueryable = baseQueryable.Where(ce => ce.Title.Contains(searchRequest.SearchTerm) || ce.Description.Contains(searchRequest.SearchTerm));
                 }
