@@ -1,0 +1,50 @@
+﻿@using CommunityEventPlanner.Shared
+
+<CascadingAuthenticationState>
+    <div class="card" style="width: 18rem;">
+      <div class="card-body">
+            <h5 class="card-title">@CommunityEvent?.Title</h5>
+            <h6 class="card-subtitle mb-2 text-muted">@CommunityEvent?.Description</h6>
+            <p class="card-text">@CommunityEvent?.Venue?.Name</p>
+            <p class="card-text">@CommunityEvent?.ScheduledDateTime.ToLongDateString()</p>
+            <p class="card-text">@CommunityEvent?.ScheduledDateTime.ToLongTimeString()</p>
+            <p class="card-text">@durationString</p>
+        <AuthorizeView>
+            <NotAuthorized><a href="login">Login</a> or <a href="register">register</a> if you wish to sign up for this event</NotAuthorized>
+                <Authorized>
+                    @if(alreadyRegistered)
+                    {
+                        <span>You have already signed up for this event.</span>
+                    }
+                    else
+                    {
+                        <button @onclick="@onSignUpClick">Sign up for this event</button>
+                    }
+                 </Authorized>           
+         </AuthorizeView>    
+      </div>
+    </div>
+</CascadingAuthenticationState>
+
+@code {
+    [Parameter]
+    public CommunityEvent? CommunityEvent { get; set; }
+
+    private bool alreadyRegistered{ get; set; }
+    private string durationString { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        durationString = CommunityEvent?.Duration.Hours > 0 ?
+            $"{CommunityEvent.Duration.Hours} hours and {CommunityEvent.Duration.Minutes} minutes" :
+            $"{CommunityEvent?.Duration.Minutes} minutes";
+
+        // Need to load the UserId and find whether the user has already registered to set the alreadyRegistered property
+    }
+
+    // NOT IMPLEMENTED - need to grab the UserId and post to the API with the communtiyEvent.Id 
+    private void onSignUpClick()
+    {
+        alreadyRegistered = true;
+    }
+}

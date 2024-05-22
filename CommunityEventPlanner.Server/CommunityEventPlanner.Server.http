@@ -1,0 +1,6 @@
+@CommunityEventPlanner.Server_HostAddress = http://localhost:5007
+
+GET {{CommunityEventPlanner.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

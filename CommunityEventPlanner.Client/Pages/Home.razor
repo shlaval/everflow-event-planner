@@ -1,0 +1,39 @@
+﻿@page "/"
+@using CommunityEventPlanner.Client.Components
+@using CommunityEventPlanner.Shared
+@using CommunityEventPlanner.Shared.Requests
+@using System.Text.Json
+@inject IHttpClientFactory httpClientFactory
+
+<PageTitle>Home</PageTitle>
+
+<h1>Community Events</h1>
+
+@if (communityEvents == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    @foreach (var communityEvent in communityEvents)
+    {
+        <CommEvent CommunityEvent="communityEvent" />
+    }
+
+}
+
+@code {
+    private CommunityEvent[]? communityEvents;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = httpClientFactory.CreateClient("AuthCookieClient");
+        var communityEventResult = await client.PostAsJsonAsync<SearchRequest>("communityevent/search", new SearchRequest(){ });
+
+        if (communityEventResult.IsSuccessStatusCode)
+        {
+            var result = await communityEventResult.Content.ReadFromJsonAsync<Result<IList<CommunityEvent>>>();
+            communityEvents = result.Value.ToArray();
+        }
+    }
+}
