@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace CommunityEventPlanner.Shared
 {
@@ -10,6 +11,7 @@ namespace CommunityEventPlanner.Shared
         [StringLength(50)]
         public string Name { get; set; }
 
+        [JsonIgnore]
         public virtual ICollection<CommunityEvent> CommunityEvents { get; set;} = new List<CommunityEvent>();
     }
 }

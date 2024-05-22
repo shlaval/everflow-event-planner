@@ -82,6 +82,7 @@ namespace CommunityEventPlanner.Tests
         }
 
         [Theory]
+        [InlineData("", new int[0], null, new int[] { 1, 2, 3, 4 })]
         [InlineData("Cobra", new int[0], null, new int[] { 2, 4 })]
         [InlineData(null, new int[] { 1, 2, 3 }, null, new int[] { 1, 2, 3, 4})]
         [InlineData(null, new int[] { 3 }, null, new int[] { 3 })]

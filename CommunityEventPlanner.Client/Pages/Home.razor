@@ -1,9 +1,54 @@
 ﻿@page "/"
+@using CommunityEventPlanner.Shared
+@using CommunityEventPlanner.Shared.Requests
+@using System.Text.Json
+@inject IHttpClientFactory httpClientFactory
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Community Events</h1>
 
+@if (communityEvents == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Title</th>
+                <th>Summary</th>
+                <th>Venue</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var communityEvent in communityEvents)
+            {
+                <tr>
+                    <td>@communityEvent.ScheduledDateTime.Date.ToShortDateString()</td>
+                    <td>@communityEvent.Title</td>
+                    <td>@communityEvent.Description</td>
+                    <td>@communityEvent.Venue?.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
+@code {
+    private CommunityEvent[]? communityEvents;
 
-Welcome to your new app.
+    protected override async Task OnInitializedAsync()
+    {
+        var client = httpClientFactory.CreateClient("AuthCookieClient");
+        var communityEventResult = await client.PostAsJsonAsync<SearchRequest>("communityevent/search", new SearchRequest(){ });
+
+        if (communityEventResult.IsSuccessStatusCode)
+        {
+            var result = await communityEventResult.Content.ReadFromJsonAsync<Result<IList<CommunityEvent>>>();
+            communityEvents = result.Value.ToArray();
+        }
+    }
+}

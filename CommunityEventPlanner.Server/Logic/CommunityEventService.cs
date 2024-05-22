@@ -1,5 +1,6 @@
 ﻿using CommunityEventPlanner.Shared;
 using CommunityEventPlanner.Shared.Requests;
+using CommunityEventPlanner.Shared.TestData;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +17,12 @@ namespace CommunityEventPlanner.Server.Logic
             _context = context;
             _userManager = userManager;
             _httpContextAccessor = httpContextAccessor;
+
+            // Debug
+            if (!_context.CommunityEvents.Any())
+            {
+                TestDataGenerator.Generate(_context);
+            }
         }
 
         public async Task<Result<int>> CreateCommunityEvent(CommunityEventCreateRequest createRequest)

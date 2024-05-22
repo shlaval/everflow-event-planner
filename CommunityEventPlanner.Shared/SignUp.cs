@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace CommunityEventPlanner.Shared
 {
@@ -11,6 +12,7 @@ namespace CommunityEventPlanner.Shared
         public DateTime CreatedDate { get; set; }
         public int CommunityEventId { get; set; }
 
+        [JsonIgnore]
         public virtual CommunityEvent CommunityEvent { get; set; }
     }
 }
